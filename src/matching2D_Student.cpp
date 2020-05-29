@@ -1,5 +1,6 @@
 #include <numeric>
 #include "matching2D.hpp"
+#include <assert.h>
 
 using namespace std;
 
@@ -150,5 +151,29 @@ void detKeypointsHarris(std::vector<cv::KeyPoint> &keypoints, cv::Mat &img, bool
 
 // Detect keypoints in image using the modern detector
 void detKeypointsModern(std::vector<cv::KeyPoint> &keypoints, cv::Mat &img, std::string detectorType, bool bVis) {
-    
+    //// ->  FAST, BRISK, ORB, AKAZE, SIFT
+    cv::Ptr<cv::FeatureDetector> detector;
+    if (detectorType.compare("FAST") == 0) {
+        int threshold = 30; // difference between intensity of the central pixel and pixels of a circle around this pixel
+        bool bNMS = true; // perform non-maxima suppression on keypoints
+        auto type = cv::FastFeatureDetector::TYPE_9_16;
+        detector = cv::FastFeatureDetector::create(threshold, bNMS, type);
+
+    } else if (detectorType.compare("BRISK") == 0) {
+        detector = cv::BRISK::create();
+    } else if (detectorType.compare("ORB") == 0) {
+        detector = cv::ORB::create();
+    } else if (detectorType.compare("AKAZE") == 0) {
+        detector = cv::AKAZE::create();
+    } else if (detectorType.compare("SIFT") == 0) {
+        detector = cv::SIFT::create();
+    } else {
+        assert(true && "Detector method not supported!");
+        return;
+    }
+
+    auto t = (double) cv::getTickCount();
+    detector->detect(img, keypoints);
+    t = ((double)cv::getTickCount() - t) / cv::getTickFrequency();
+    cout << detectorType + " detector with n= " << keypoints.size() << " keypoints in " << 1000 * t / 1.0 << " ms" << endl;
 }
