@@ -32,7 +32,7 @@ void matchDescriptors(std::vector<cv::KeyPoint> &kPtsSource, std::vector<cv::Key
 
 // Use one of several types of state-of-art descriptors to uniquely identify keypoints
 void descKeypoints(vector<cv::KeyPoint> &keypoints, cv::Mat &img, cv::Mat &descriptors, string descriptorType) {
-    // select appropriate descriptor
+    // select appropriate descriptor  BRIEF, ORB, FREAK, AKAZE, SIFT
     cv::Ptr<cv::DescriptorExtractor> extractor;
     if (descriptorType.compare("BRISK") == 0) {
 
@@ -41,9 +41,17 @@ void descKeypoints(vector<cv::KeyPoint> &keypoints, cv::Mat &img, cv::Mat &descr
         float patternScale = 1.0f; // apply this scale to the pattern used for sampling the neighbourhood of a keypoint.
 
         extractor = cv::BRISK::create(threshold, octaves, patternScale);
+    } else if (descriptorType.compare("BRIEF")) {
+        extractor = cv::ORB::create();
+    } else if (descriptorType.compare("FREAK") == 0) {
+        extractor = cv::xfeatures2d::FREAK::create();
+    } else if (descriptorType.compare("AKAZE") == 0) {
+        extractor = cv::AKAZE::create();
+    } else if (descriptorType.compare("SIFT") == 0) {
+        extractor = cv::SIFT::create();
     } else {
-
-        //...
+        assert(true && "Method not support!");
+        return;
     }
 
     // perform feature description
@@ -174,6 +182,7 @@ void detKeypointsModern(std::vector<cv::KeyPoint> &keypoints, cv::Mat &img, std:
 
     auto t = (double) cv::getTickCount();
     detector->detect(img, keypoints);
-    t = ((double)cv::getTickCount() - t) / cv::getTickFrequency();
-    cout << detectorType + " detector with n= " << keypoints.size() << " keypoints in " << 1000 * t / 1.0 << " ms" << endl;
+    t = ((double) cv::getTickCount() - t) / cv::getTickFrequency();
+    cout << detectorType + " detector with n= " << keypoints.size() << " keypoints in " << 1000 * t / 1.0 << " ms"
+         << endl;
 }
