@@ -47,8 +47,6 @@ numeric
 -
 matching2D.hpp
 /home/rubing/udacity/SFND_2D_Feature_Tracking/src/matching2D.hpp
-assert.h
--
 
 /usr/local/include/opencv4/opencv2/core.hpp
 opencv2/core/cvdef.h

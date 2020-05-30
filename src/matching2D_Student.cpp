@@ -1,6 +1,5 @@
 #include <numeric>
 #include "matching2D.hpp"
-#include <assert.h>
 
 using namespace std;
 
@@ -17,7 +16,7 @@ void matchDescriptors(std::vector<cv::KeyPoint> &kPtsSource, std::vector<cv::Key
         int normType = cv::NORM_HAMMING;
         matcher = cv::BFMatcher::create(normType, crossCheck);
     } else if (matcherType.compare("MAT_FLANN") == 0) {
-        // ...
+        matcher = cv::makePtr<cv::FlannBasedMatcher>(cv::makePtr<cv::flann::LshIndexParams>(12, 20, 2));
     }
 
     // perform matching task
@@ -26,7 +25,19 @@ void matchDescriptors(std::vector<cv::KeyPoint> &kPtsSource, std::vector<cv::Key
         matcher->match(descSource, descRef, matches); // Finds the best match for each descriptor in desc1
     } else if (selectorType.compare("SEL_KNN") == 0) { // k nearest neighbors (k=2)
 
-        // ...
+        int k = 2;
+        std::vector<std::vector<cv::DMatch>> knn_matches;
+        matcher->knnMatch(descSource, descRef, knn_matches, k);
+
+        // Filter matches using ratio test
+        const float ratio_thresh = 0.8f;
+        std::vector<cv::DMatch> good_matches;
+        for (size_t i = 0; i < knn_matches.size(); i++) {
+            if (knn_matches[i].size() == 2 && knn_matches[i][0].distance < ratio_thresh * knn_matches[i][1].distance) {
+                good_matches.push_back(knn_matches[i][0]);
+            }
+        }
+        matches = good_matches;
     }
 }
 
@@ -50,8 +61,7 @@ void descKeypoints(vector<cv::KeyPoint> &keypoints, cv::Mat &img, cv::Mat &descr
     } else if (descriptorType.compare("SIFT") == 0) {
         extractor = cv::SIFT::create();
     } else {
-        assert(true && "Method not support!");
-        return;
+        throw invalid_argument(descriptorType + " descriptor method not supported!");
     }
 
     // perform feature description
@@ -176,8 +186,7 @@ void detKeypointsModern(std::vector<cv::KeyPoint> &keypoints, cv::Mat &img, std:
     } else if (detectorType.compare("SIFT") == 0) {
         detector = cv::SIFT::create();
     } else {
-        assert(true && "Detector method not supported!");
-        return;
+        throw invalid_argument(detectorType + " detector method not supported!");
     }
 
     auto t = (double) cv::getTickCount();
